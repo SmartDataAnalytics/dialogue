@@ -174,7 +174,10 @@ class POIGetCorefResource(GetCorefResource):
                     If not specified, $POI resolution from neural-coref results is not done.
                     neural-coref $POI resolution currently requires the coref span to match at least half of the poispan
     """
-    general_expressions = [["this poi", "this thing"], ["this"]]
+    general_expressions = [["this poi", "this thing"], ["this", "it"]]
+    #   [[strong expressions], [weak expressions]]
+    #       - strong expressions replace neural-coref results,
+    #       - weak expressions only invoked when neither strong expressions or neural-coref yielded any results
     typed_expressions = {
         "building": [["this building", "this construction", "construction"], []],
         "location": [["this location", "this place"], []]
