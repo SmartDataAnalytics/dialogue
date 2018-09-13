@@ -151,7 +151,30 @@ class GetCorefResource(object):
 
 
 class POIGetCorefResource(GetCorefResource):
-    general_expressions = [["this poi", "this thing"], []]
+    """
+    HOW THIS WORKS
+    - uses neural-coref for coreference resolution (see GetCorefResource). Returns result in span-return format.
+    - supports manual $POI-referring expressions, which can be typed.
+        If manual expression matches, results of neural-coref are discarded.
+        Only first occurrence of first matched manual expression is used.
+        Returns result in $POI-return format
+    - for neural-coref, transforms span-return to $POI-return if intro and poispan in intro (char-level spec) is provided
+
+    Example usage:
+        http://localhost:6007/poigetcoref?poitype=building&poispan=20-37&intro=we%20currently%20are%20at%20the%20tower%20of%20pisa&context=mr.%20paul%20likes%20dumplings.%20he%20loves%20them.%20&sentence=who%20built%20this%20tower
+
+    GET arguments:
+    - context:      string with dialogue history
+    - sentence:     current sentence to resolve referring expressions of.
+                    All other clusters in context that do not involve "sentence" are not returned.
+    - intro:        (optional) string introducing $POI. Can be simple sentence: e.g. "We are at the tower of Pisa"
+                    See also poitype and poispan for optional additional functionality.
+    - poitype:      (optional) type of poi. If not specified, typed_expressions is not used
+    - poispan:      (optional) expects span in format "b-e" where "b" and "e" are two integers.
+                    If not specified, $POI resolution from neural-coref results is not done.
+                    neural-coref $POI resolution currently requires the coref span to match at least half of the poispan
+    """
+    general_expressions = [["this poi", "this thing"], ["this"]]
     typed_expressions = {
         "building": [["this building", "this construction", "construction"], []],
         "location": [["this location", "this place"], []]
@@ -160,10 +183,13 @@ class POIGetCorefResource(GetCorefResource):
     def on_get(self, req, resp):
         intro = req.get_param("intro")
         poitype = req.get_param("poitype")
+        poispan = req.get_param("poispan")
+        if poispan is not None:
+            poispan = [int(x) for x in poispan.split("-")]
         context = req.get_param("context")
         sentence = req.get_param("sentence")
         self.response = {}
-        context, sentence, context_tokens, sentence_tokens, refs = self.get_corefs(context, sentence, intro, poitype)
+        context, sentence, context_tokens, sentence_tokens, refs = self.get_corefs(context, sentence, intro, poitype, poispan)
         self.response["context"] = context
         self.response["sentence"] = sentence
         self.response["context_tokens"] = context_tokens
@@ -174,7 +200,7 @@ class POIGetCorefResource(GetCorefResource):
         resp.append_header('Access-Control-Allow-Origin', "*")
         resp.status = falcon.HTTP_200
 
-    def get_corefs(self, context, sentence, intro, poitype):
+    def get_corefs(self, context, sentence, intro, poitype, poispan):
         _context = intro + " -- " + context
         context, sentence, context_tokens, sentence_tokens, refs = super(POIGetCorefResource, self).get_corefs(_context, sentence)
         applicable_expressions = [self.general_expressions[0] + [], self.general_expressions[1] + []]
@@ -196,7 +222,32 @@ class POIGetCorefResource(GetCorefResource):
             if reference is not None:
                 references.append(reference)
                 break
-        if len(references) > 0:     # manual overrides
+        if len(references) > 0:     # manual overrides neuralcoref
+            refs = references
+        else:                       # check if we can resolve neuralcoref refs to poispan --> replace
+            if poispan is None or intro is None:
+                pass
+            else:
+                for ref in refs:        # neuralcoref refs
+                    if ref["to"]["start_char"] >= poispan[0] and ref["to"]["end_char"] <= poispan[1]:
+                        poispanlen = poispan[1] - poispan[0]
+                        refspanlen = ref["to"]["end_char"] - ref["to"]["start_char"]
+                        if refspanlen / poispanlen > 0.5:
+                            ref["to"] = "$POI"
+
+        if len(refs) == 0:       # previous steps didn't return anything --> use weak manual expressions
+            references = []
+            for expr in applicable_expressions[1]:
+                reference = None
+                occurences = [m for m in re.finditer(expr, sentence)]
+                if len(occurences) > 0:
+                    reference = {"from": {"text": occurences[0].group(0),
+                                 "start_char": occurences[0].start(),
+                                 "end_char": occurences[0].end()},
+                                 "to": "$POI"}
+                if reference is not None:
+                    references.append(reference)
+                    break
             refs = references
         return context, sentence, context_tokens, sentence_tokens, refs
 
