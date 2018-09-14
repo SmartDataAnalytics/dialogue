@@ -310,8 +310,6 @@ class EntityGetCorefResource(POIGetCorefResource):
                     pass
                 else:
                     for ref in refs:        # neuralcoref refs
-                        print(ref)
-                        print(entity_span)
                         if isinstance(ref["to"], dict) and ref["to"]["start_char"] >= entity_span[0] and ref["to"]["end_char"] <= entity_span[1]:
                             entity_spanlen = entity_span[1] - entity_span[0]
                             refspanlen = ref["to"]["end_char"] - ref["to"]["start_char"]
