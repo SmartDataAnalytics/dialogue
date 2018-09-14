@@ -95,8 +95,8 @@ class GetCorefResource(object):
         context, sentence, context_tokens, sentence_tokens, refs = self.get_corefs(context, sentence)
         self.response["context"] = context
         self.response["sentence"] = sentence
-        self.response["context_tokens"] = context_tokens
-        self.response["sentence_tokens"] = sentence_tokens
+        # self.response["context_tokens"] = context_tokens
+        # self.response["sentence_tokens"] = sentence_tokens
         self.response["references"] = refs
         resp.body = json.dumps(self.response)
         resp.content_type = 'application/json'
@@ -108,12 +108,12 @@ class GetCorefResource(object):
         clusters = self.clusterer.get_clusters(text)
         # get tokens of sentence
         tokens = clusters["tokens"]
-        i = 0
-        while i < len(tokens):
-            if tokens[i] == "---":
-                break
-            i += 1
-        sentence_start = i
+        # i = 0
+        # while i < len(tokens):
+        #     if tokens[i] == "---":
+        #         break
+        #     i += 1
+        # sentence_start = i
         i = 0
         while i < len(text) - 5:
             if text[i:i+5] == " --- ":
@@ -121,33 +121,44 @@ class GetCorefResource(object):
             i += 1
         sentence_start_char = i
 
-        context_tokens = tokens[:sentence_start]
-        sentence_tokens = tokens[sentence_start+1:]
+        # context_tokens = tokens[:sentence_start]
+        # sentence_tokens = tokens[sentence_start+1:]
         context = text[:sentence_start_char]
         sentence = text[sentence_start_char+5:]
         references = []
         for cluster in clusters["clusters"]:
             cluster_mention = None
             for mention in cluster["mentions"]:
-                if mention["start"] >= sentence_start:
+                if mention["start_char"] >= sentence_start_char:
                     cluster_mention = mention
                     break
             if cluster_mention is not None:
                 # mentioned in sentence !
                 reference = {"from": {"text": cluster_mention["text"],
-                                      "start": cluster_mention["start"] - sentence_start - 1,
-                                      "end": cluster_mention["end"] - sentence_start - 1,
+                                      # "start": cluster_mention["start"] - sentence_start - 1,
+                                      # "end": cluster_mention["end"] - sentence_start - 1,
                                       "start_char": cluster_mention["start_char"] - sentence_start_char - 5,
                                       "end_char": cluster_mention["end_char"] - sentence_start_char - 5},
                              "to":   {"text": cluster["main"]["text"],
-                                      "start": cluster["main"]["start"],
-                                      "end": cluster["main"]["end"],
+                                      # "start": cluster["main"]["start"],
+                                      # "end": cluster["main"]["end"],
                                       "start_char": cluster["main"]["start_char"],
                                       "end_char": cluster["main"]["end_char"]},
                              # "cluster": cluster
                              }
                 references.append(reference)
-        return context, sentence, context_tokens, sentence_tokens, references
+
+        # resolved
+        resolved = clusters["resolved"]
+        i = 0
+        while i < len(resolved) - 5:
+            if resolved[i:i+5] == " --- ":
+                break
+            i += 1
+        sentence_start_char_resolved = i
+        resolved_sentence = resolved[i+5:]
+
+        return context, sentence, references, resolved_sentence
 
 
 class POIGetCorefResource(GetCorefResource):
@@ -192,20 +203,18 @@ class POIGetCorefResource(GetCorefResource):
         context = req.get_param("context")
         sentence = req.get_param("sentence")
         self.response = {}
-        context, sentence, context_tokens, sentence_tokens, refs = self.get_corefs(context, sentence, intro, poitype, poispan)
+        context, sentence, refs, resolved_sentence = self.get_corefs(context, sentence, intro, poitype, poispan)
         self.response["context"] = context
         self.response["sentence"] = sentence
-        self.response["context_tokens"] = context_tokens
-        self.response["sentence_tokens"] = sentence_tokens
+        # self.response["context_tokens"] = context_tokens
+        # self.response["sentence_tokens"] = sentence_tokens
         self.response["references"] = refs
         resp.body = json.dumps(self.response)
         resp.content_type = 'application/json'
         resp.append_header('Access-Control-Allow-Origin', "*")
         resp.status = falcon.HTTP_200
 
-    def get_corefs(self, context, sentence, intro, poitype, poispan):
-        _context = intro + " -- " + context
-        context, sentence, context_tokens, sentence_tokens, refs = super(POIGetCorefResource, self).get_corefs(_context, sentence)
+    def do_poi_expressions(self, sentence, poitype=None, which="strong"):
         applicable_expressions = [self.general_expressions[0] + [], self.general_expressions[1] + []]
         if poitype is not None:
             if poitype in self.typed_expressions:
@@ -214,7 +223,8 @@ class POIGetCorefResource(GetCorefResource):
             else:
                 print("WARNING: poitype {} has no expressions".format(poitype))
         references = []
-        for expr in applicable_expressions[0]:
+        which = 0 if which == "strong" else 1
+        for expr in applicable_expressions[which]:
             reference = None
             occurences = [m for m in re.finditer(expr, sentence)]
             if len(occurences) > 0:
@@ -225,9 +235,23 @@ class POIGetCorefResource(GetCorefResource):
             if reference is not None:
                 references.append(reference)
                 break
-        if len(references) > 0:     # manual overrides neuralcoref
-            refs = references
-        else:                       # check if we can resolve neuralcoref refs to poispan --> replace
+        resolved_sentence = sentence
+        assert(len(references) < 2)
+        if len(references) > 0:
+            ref = references[0]
+            resolved_sentence = sentence[:ref["from"]["start_char"]] + "$POI" + sentence[ref["from"]["end_char"]]
+        return references, resolved_sentence
+
+    def get_corefs_(self, context, sentence):
+        return super(POIGetCorefResource, self).get_corefs(context, sentence)
+
+    def get_corefs(self, context, sentence, intro, poitype, poispan):
+        _context = intro + " -- " + context
+
+        refs, resolved_sentence = self.do_poi_expressions(sentence, poitype=poitype, which="strong")
+
+        if len(refs) == 0:
+            context, sentence, refs, resolved_sentence = self.get_corefs_(_context, sentence)
             if poispan is None or intro is None:
                 pass
             else:
@@ -239,31 +263,85 @@ class POIGetCorefResource(GetCorefResource):
                             ref["to"] = "$POI"
 
         if len(refs) == 0:       # previous steps didn't return anything --> use weak manual expressions
-            references = []
-            for expr in applicable_expressions[1]:
-                reference = None
-                occurences = [m for m in re.finditer(expr, sentence)]
-                if len(occurences) > 0:
-                    reference = {"from": {"text": occurences[0].group(0),
-                                 "start_char": occurences[0].start(),
-                                 "end_char": occurences[0].end()},
-                                 "to": "$POI"}
-                if reference is not None:
-                    references.append(reference)
-                    break
-            refs = references
-        return context, sentence, context_tokens, sentence_tokens, refs
+            refs, resolved_sentence = self.do_poi_expressions(sentence, poitype=poitype, which="weak")
+        return context, sentence, refs, resolved_sentence
+
+
+class EntityGetCorefResource(POIGetCorefResource):
+    def on_get(self, req, resp):
+        data = req.get_param("data")
+        data = json.loads(data)
+        context = data["context"]
+        entities = data["entities"]
+        sentence = data["sentence"]
+        self.response = {}
+        context, sentence, refs, resolved_sentence = self.get_corefs(context, sentence, entities)
+        self.response["context"] = context
+        self.response["sentence"] = sentence
+        # self.response["context_tokens"] = context_tokens
+        # self.response["sentence_tokens"] = sentence_tokens
+        self.response["references"] = refs
+        self.response["resolved_sentence"] = resolved_sentence
+        resp.body = json.dumps(self.response)
+        resp.content_type = 'application/json'
+        resp.append_header('Access-Control-Allow-Origin', "*")
+        resp.status = falcon.HTTP_200
+
+    def get_corefs(self, context, sentence, entities):
+        assert("$POI" in entities)
+
+        # STRONG POI EXPRESSIONS
+        poitype = None
+        if "$POI" in entities and "type" in entities["$POI"]:
+            poitype = entities["$POI"]["type"]
+
+        refs, resolved_sentence = self.do_poi_expressions(sentence, poitype=poitype, which="strong")
+
+        # RESOLVING ENTITIES
+        if len(refs) == 0:     # no strong expressions
+            # do neural-coref for sentence
+            context, sentence, refs, resolved_sentence = self.get_corefs_(context, sentence)
+            #  check if we can resolve neuralcoref refs to entities --> replace
+            for entity in entities:
+                entity_span = None
+                if "span" in entities[entity]:
+                    entity_span = entities[entity]["span"]
+                if entity_span is None:
+                    pass
+                else:
+                    for ref in refs:        # neuralcoref refs
+                        print(ref)
+                        print(entity_span)
+                        if isinstance(ref["to"], dict) and ref["to"]["start_char"] >= entity_span[0] and ref["to"]["end_char"] <= entity_span[1]:
+                            entity_spanlen = entity_span[1] - entity_span[0]
+                            refspanlen = ref["to"]["end_char"] - ref["to"]["start_char"]
+                            if refspanlen / entity_spanlen > 0.5:
+                                ref["to"] = entity
+
+        # WEAK POI EXPRESSIONS
+        if len(refs) == 0:       # previous steps didn't return anything --> use weak manual expressions
+            refs, resolved_sentence = self.do_poi_expressions(sentence, poitype=poitype, which="weak")
+        return context, sentence, refs, resolved_sentence
+
+
+class TestJsonResource(object):
+    def on_get(self, req, resp):
+        data_json = req.get_param("data")
+        data = json.loads(data_json)
+        print(data)
 
 
 if __name__ == '__main__':
     port = int(sys.argv[1])
     size = str(sys.argv[2])
+    APP = falcon.API()
     clusters = ClusterResource(size)
     getcoref = GetCorefResource(clusters)
     poigetcoref = POIGetCorefResource(clusters)
-    APP = falcon.API()
     APP.add_route('/clusters', clusters)
     APP.add_route('/getcoref', getcoref)
     APP.add_route('/poigetcoref', poigetcoref)
+    APP.add_route('/entitygetcoref', EntityGetCorefResource(clusters))
+    APP.add_route('/testjson', TestJsonResource())
     HTTPD = make_server('0.0.0.0', port, APP)
     HTTPD.serve_forever()
