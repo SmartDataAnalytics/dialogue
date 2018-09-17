@@ -239,7 +239,7 @@ class POIGetCorefResource(GetCorefResource):
         assert(len(references) < 2)
         if len(references) > 0:
             ref = references[0]
-            resolved_sentence = sentence[:ref["from"]["start_char"]] + "$POI" + sentence[ref["from"]["end_char"]]
+            resolved_sentence = sentence[:ref["from"]["start_char"]] + "$POI" + sentence[ref["from"]["end_char"]:]
         return references, resolved_sentence
 
     def get_corefs_(self, context, sentence):
