@@ -331,14 +331,9 @@ class TestJsonResource(object):
 
 if __name__ == '__main__':
     print(sys.argv)
-    docker = False
     try:
-        if docker:
-            port = int(sys.argv[0])
-            size = str(sys.argv[1])
-        else:
-            port = int(sys.argv[1])
-            size = str(sys.argv[2])
+        port = int(sys.argv[1])
+        size = str(sys.argv[2])
     except Exception as e:
         print("getting args failed, using defaults")
         port = 8008
