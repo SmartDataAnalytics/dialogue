@@ -330,6 +330,7 @@ class TestJsonResource(object):
 
 
 if __name__ == '__main__':
+    print(sys.argv)
     port = int(sys.argv[1])
     size = str(sys.argv[2])
     APP = falcon.API()
