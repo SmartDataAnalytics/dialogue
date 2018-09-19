@@ -273,7 +273,9 @@ class POIGetCorefResource(GetCorefResource):
 
 class EntityGetCorefResource(POIGetCorefResource):
     def on_get(self, req, resp):
+        print("request came in ...")
         data = req.get_param("data")
+        print("request data: {}".format(data))
         data = json.loads(data)
         context = data["context"]
         entities = data["entities"]
