@@ -107,7 +107,7 @@ class GetCorefResource(object):
         text = context + " --- " + sentence
         clusters = self.clusterer.get_clusters(text)
         # get tokens of sentence
-        tokens = clusters["tokens"]
+        # tokens = clusters["tokens"]
         # i = 0
         # while i < len(tokens):
         #     if tokens[i] == "---":
@@ -126,37 +126,41 @@ class GetCorefResource(object):
         context = text[:sentence_start_char]
         sentence = text[sentence_start_char+5:]
         references = []
-        for cluster in clusters["clusters"]:
-            cluster_mention = None
-            for mention in cluster["mentions"]:
-                if mention["start_char"] >= sentence_start_char:
-                    cluster_mention = mention
-                    break
-            if cluster_mention is not None:
-                # mentioned in sentence !
-                reference = {"from": {"text": cluster_mention["text"],
-                                      # "start": cluster_mention["start"] - sentence_start - 1,
-                                      # "end": cluster_mention["end"] - sentence_start - 1,
-                                      "start_char": cluster_mention["start_char"] - sentence_start_char - 5,
-                                      "end_char": cluster_mention["end_char"] - sentence_start_char - 5},
-                             "to":   {"text": cluster["main"]["text"],
-                                      # "start": cluster["main"]["start"],
-                                      # "end": cluster["main"]["end"],
-                                      "start_char": cluster["main"]["start_char"],
-                                      "end_char": cluster["main"]["end_char"]},
-                             # "cluster": cluster
-                             }
-                references.append(reference)
+        if "clusters" in clusters:
+            for cluster in clusters["clusters"]:
+                cluster_mention = None
+                for mention in cluster["mentions"]:
+                    if mention["start_char"] >= sentence_start_char:
+                        cluster_mention = mention
+                        break
+                if cluster_mention is not None:
+                    # mentioned in sentence !
+                    reference = {"from": {"text": cluster_mention["text"],
+                                          # "start": cluster_mention["start"] - sentence_start - 1,
+                                          # "end": cluster_mention["end"] - sentence_start - 1,
+                                          "start_char": cluster_mention["start_char"] - sentence_start_char - 5,
+                                          "end_char": cluster_mention["end_char"] - sentence_start_char - 5},
+                                 "to":   {"text": cluster["main"]["text"],
+                                          # "start": cluster["main"]["start"],
+                                          # "end": cluster["main"]["end"],
+                                          "start_char": cluster["main"]["start_char"],
+                                          "end_char": cluster["main"]["end_char"]},
+                                 # "cluster": cluster
+                                 }
+                    references.append(reference)
 
         # resolved
-        resolved = clusters["resolved"]
-        i = 0
-        while i < len(resolved) - 5:
-            if resolved[i:i+5] == " --- ":
-                break
-            i += 1
-        sentence_start_char_resolved = i
-        resolved_sentence = resolved[i+5:]
+        if "resolved" in clusters:
+            resolved = clusters["resolved"]
+            i = 0
+            while i < len(resolved) - 5:
+                if resolved[i:i+5] == " --- ":
+                    break
+                i += 1
+            sentence_start_char_resolved = i
+            resolved_sentence = resolved[i+5:]
+        else:
+            resolved_sentence = sentence
 
         return context, sentence, references, resolved_sentence
 
