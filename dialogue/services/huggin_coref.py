@@ -290,6 +290,8 @@ class EntityGetCorefResource(POIGetCorefResource):
     def get_corefs(self, context, sentence, entities):
         assert("$POI" in entities)
 
+        print(context, sentence, entities)
+
         # STRONG POI EXPRESSIONS
         poitype = None
         if "$POI" in entities and "type" in entities["$POI"]:
