@@ -43,6 +43,11 @@ class ClusterResource(object):
         print("Server loaded")
         self.response = None
 
+    def mentions_overlap(self, main, mention):
+        main_idxs = set(range(main["start_char"], main["end_char"]))
+        mention_idxs = set(range(mention["start_char"], mention["end_char"]))
+        return len(main_idxs & mention_idxs) > 0
+
     def get_clusters(self, text):
         response = {}
         if text is not None:
@@ -61,11 +66,15 @@ class ClusterResource(object):
                 for cluster in doc._.coref_clusters:
                     _cluster = {}
                     main = cluster.main
-                    _cluster["main"] = get_dict_of_span(main)
+                    _main = get_dict_of_span(main)
+                    _cluster["main"] = _main
                     _cluster["mentions"] = []
                     for mention in cluster.mentions:
-                        _cluster["mentions"].append(get_dict_of_span(mention))
-                    clusters.append(_cluster)
+                        _mention = get_dict_of_span(mention)
+                        if not self.mentions_overlap(_main, _mention):
+                            _cluster["mentions"].append(_mention)
+                    if len(_cluster["mentions"]) > 0:
+                        clusters.append(_cluster)
                 resolved = doc._.coref_resolved
                 # self.response['mentions'] = mentions
                 response['clusters'] = clusters
@@ -159,6 +168,7 @@ class GetCorefResource(object):
                 i += 1
             sentence_start_char_resolved = i
             resolved_sentence = resolved[i+5:]
+            resolved_sentence = resolved_sentence.replace("---", "")
         else:
             resolved_sentence = sentence
 
