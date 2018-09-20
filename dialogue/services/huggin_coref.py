@@ -92,6 +92,8 @@ class ClusterResource(object):
 
 
 class GetCorefResource(object):
+    DELIM = " ---. "
+
     def __init__(self, clusterer):
         super(GetCorefResource, self).__init__()
         self.clusterer = clusterer
@@ -112,28 +114,37 @@ class GetCorefResource(object):
         resp.append_header('Access-Control-Allow-Origin', "*")
         resp.status = falcon.HTTP_200
 
-    def get_corefs(self, context, sentence):
-        text = context + " --- " + sentence
-        clusters = self.clusterer.get_clusters(text)
-        # get tokens of sentence
-        # tokens = clusters["tokens"]
-        # i = 0
-        # while i < len(tokens):
-        #     if tokens[i] == "---":
-        #         break
-        #     i += 1
-        # sentence_start = i
-        i = 0
-        while i < len(text) - 5:
-            if text[i:i+5] == " --- ":
-                break
-            i += 1
-        sentence_start_char = i
+    def resolve_text(self, text, refs):
+        if len(refs) == 0:
+            return None
+        replacements = []
+        for ref in refs:
+            s, e = ref["from"]["start_char"], ref["from"]["end_char"]
+            to = ref["to"]["text"]
+            replacements.append((s, e, to))
+        replacements = sorted(replacements, key=lambda x: x[0], reverse=True)
+        prev_e = 0
+        acc = []
+        for replacement in replacements:
+            s, e, to = replacement
+            if s < prev_e:
+                print("WARNING: overlapping replacements: replace from {} to {} by {} in {}".format(s, e, to, text))
+                continue        # ignore
+            acc.append(text[prev_e:s])
+            acc.append(to)
+            prev_e = e
+        acc.append(text[prev_e:])
+        acc = "".join(acc)
+        return acc
 
-        # context_tokens = tokens[:sentence_start]
-        # sentence_tokens = tokens[sentence_start+1:]
+    def get_corefs(self, context, sentence):
+        text = context + self.DELIM + sentence
+        clusters = self.clusterer.get_clusters(text)
+
+        sentence_start_char = text.find(self.DELIM)
+
         context = text[:sentence_start_char]
-        sentence = text[sentence_start_char+5:]
+        sentence = text[sentence_start_char+len(self.DELIM):]
         references = []
         if "clusters" in clusters:
             for cluster in clusters["clusters"]:
@@ -147,8 +158,8 @@ class GetCorefResource(object):
                     reference = {"from": {"text": cluster_mention["text"],
                                           # "start": cluster_mention["start"] - sentence_start - 1,
                                           # "end": cluster_mention["end"] - sentence_start - 1,
-                                          "start_char": cluster_mention["start_char"] - sentence_start_char - 5,
-                                          "end_char": cluster_mention["end_char"] - sentence_start_char - 5},
+                                          "start_char": cluster_mention["start_char"] - sentence_start_char - len(self.DELIM),
+                                          "end_char": cluster_mention["end_char"] - sentence_start_char - len(self.DELIM)},
                                  "to":   {"text": cluster["main"]["text"],
                                           # "start": cluster["main"]["start"],
                                           # "end": cluster["main"]["end"],
@@ -159,17 +170,8 @@ class GetCorefResource(object):
                     references.append(reference)
 
         # resolved
-        if "resolved" in clusters:
-            resolved = clusters["resolved"]
-            i = 0
-            while i < len(resolved) - 5:
-                if resolved[i:i+5] == " --- ":
-                    break
-                i += 1
-            sentence_start_char_resolved = i
-            resolved_sentence = resolved[i+5:]
-            resolved_sentence = resolved_sentence.replace("---", "")
-        else:
+        resolved_sentence = self.resolve_text(sentence, references)
+        if resolved_sentence is None:
             resolved_sentence = sentence
 
         return context, sentence, references, resolved_sentence
@@ -347,7 +349,23 @@ class TestJsonResource(object):
         print(data)
 
 
+def test_shelve():
+    import shelve
+    with shelve.open("/tmp/shelvetest") as s:
+        s["id"] = {
+            "a": list(),
+            "b": "0"
+        }
+    with shelve.open('/tmp/shelvetest', writeback=True) as s:
+        s["id"]["a"].append("qsdfqsdf")
+
+    with shelve.open("/tmp/shelvetest") as s:
+        print(s["id"])
+
+
 if __name__ == '__main__':
+    test_shelve()
+    sys.exit()
     print(sys.argv)
     try:
         port = int(sys.argv[1])
