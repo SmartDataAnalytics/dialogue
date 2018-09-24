@@ -365,7 +365,6 @@ def test_shelve():
 
 if __name__ == '__main__':
     test_shelve()
-    sys.exit()
     print(sys.argv)
     try:
         port = int(sys.argv[1])
