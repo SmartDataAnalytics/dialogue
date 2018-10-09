@@ -43,10 +43,10 @@ class ClusterResource(object):
         self.nlp = spacy.load(model)
 
         if self.nlp.pipeline[3][0].lower().strip() == "neuralcoref":
-            nlp.pipeline[3][1].cfg["greedyness"] = float(os.getenv("GREEDYNESS", 0.5))
-            nlp.pipeline[3][1].cfg["max_dist"] = float(os.getenv("MAX_DIST", 20))
-            nlp.pipeline[3][1].cfg["max_dist_match"] = float(os.getenv("MAX_DIST_MATCH", 500))
-            print("Parameters:\n" + json.dumps(nlp.pipeline[3][1].cfg, indent=4))
+            self.nlp.pipeline[3][1].cfg["greedyness"] = float(os.getenv("GREEDYNESS", 0.5))
+            self.nlp.pipeline[3][1].cfg["max_dist"] = float(os.getenv("MAX_DIST", 20))
+            self.nlp.pipeline[3][1].cfg["max_dist_match"] = float(os.getenv("MAX_DIST_MATCH", 500))
+            print("Parameters:\n" + json.dumps(self.nlp.pipeline[3][1].cfg, indent=4))
 
         print("Server loaded")
         self.response = None
