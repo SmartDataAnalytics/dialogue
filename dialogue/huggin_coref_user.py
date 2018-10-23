@@ -2,6 +2,7 @@
 import re
 import json
 import requests
+import numpy as np
 
 
 def run():
@@ -49,36 +50,77 @@ def get_links(p="../dial2_purenl.json", ppoi="../hit2poi250.json"):
         label = uri2label(v)
         # print(k, label)
 
+    # print(d["3QXFBUZ4ZKO2ZRDNVK0EHHDTV1MGUQ"])
+    # return
 
-    get_links_onedialog(di[1][1], poi[di[1][0]])
+    ret = {}
+    for k in d:
+        print(k)
+        dialog = d[k]
+        dialog_poi = poi[k]
+        links = get_links_one(dialog, dialog_poi)
+        ret[k] = links
+
+    k = di[2][0]
+    print(d[k])
+    print(ret[k])
+
+    return ret
 
 
-def get_links_onedialog(dialog, poi):
-    # print("getting links from coref for dialog about {} \n {}".format(poi, dialog))
+def get_links_one(dialog, poi):
     prefix = "This is "
     intro = prefix + uri2label(poi)
     poistart = len(prefix)
     poiend = poistart + len(uri2label(poi))
-    print(intro)
+    # print(intro)
 
     entities = {
         "$POI": {"span": [poistart, poiend]},
     }
 
-    context = "\n".join(dialog[:-2])
-    sentence = dialog[-2]
+    lines = [intro] + dialog
+    lineseps = [0] + list(np.cumsum([len(x)+1 for x in lines]))
 
-    data = {"context": context,
-            "entities": entities,
-            "sentence": sentence}
-    data_json = json.dumps(data)
+    links = []
 
-    payload = {"data": data_json}
-    r = requests.get("http://localhost:8008/entitygetcoref", params=payload)
-    print("")
-    print(r.text)
+    # print(lineseps)
+    links = {}
+    for i in range(1, len(lines), 2):
+        context = "\n".join(lines[:i])
+        sentence = lines[i]
+        # print(context)
+        # print("Sentence: " + sentence)
+
+        data = {"context": context,
+                "entities": entities,
+                "sentence": sentence}
+        data_json = json.dumps(data)
+
+        payload = {"data": data_json}
+        r = requests.get("http://localhost:8008/entitygetcoref", params=payload)
+        # print("")
+        # print(json.loads(r.text)["references"])
+        # print(json.loads(r.text))
+        whichline = None
+        for ref in json.loads(r.text)["references"]:
+            # print("refers to: " + str(ref["to"]))
+            # find where in context the ref falls based on lineseps
+            for j in range(len(lineseps[:-1])):
+                l_start, l_end = lineseps[j], lineseps[j+1]
+                if ref["to"] == "$POI":
+                    whichline = 0
+                    break
+                if l_start <= ref["to"]["start_char"] and l_end >= ref["to"]["end_char"]:
+                    whichline = j
+                    break # found
+            # print(whichline)
+        if whichline is not None:
+            links[i-1] = [whichline-1]
+    return links
 
 
 if __name__ == '__main__':
-    get_links()
+    ret = get_links()
+    json.dump(ret, open("dial2_predlinks.json", "w"))
 

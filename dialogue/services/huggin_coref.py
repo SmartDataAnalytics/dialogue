@@ -249,7 +249,7 @@ class POIGetCorefResource(GetCorefResource):
         references = []
         which = 0 if which == "strong" else 1
         for expr in applicable_expressions[which]:
-            expr = " {} ".format(expr)      # TODO: better fix, taking into account other kind of punctuation
+            expr = "(?:^|(?<=\s|\?|\.|!)){}(?=\s|\?|\.|!|$)".format(expr)      # DONE: better fix, taking into account other kind of punctuation
             reference = None
             occurences = [m for m in re.finditer(expr, sentence)]
             if len(occurences) > 0:
@@ -264,7 +264,7 @@ class POIGetCorefResource(GetCorefResource):
         assert(len(references) < 2)
         if len(references) > 0:
             ref = references[0]
-            resolved_sentence = sentence[:ref["from"]["start_char"]] + " $POI " + sentence[ref["from"]["end_char"]:]
+            resolved_sentence = sentence[:ref["from"]["start_char"]] + "$POI" + sentence[ref["from"]["end_char"]:]
         return references, resolved_sentence
 
     def get_corefs_(self, context, sentence):
