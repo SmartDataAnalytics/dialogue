@@ -249,6 +249,7 @@ class POIGetCorefResource(GetCorefResource):
         references = []
         which = 0 if which == "strong" else 1
         for expr in applicable_expressions[which]:
+            expr = " {} ".format(expr)
             reference = None
             occurences = [m for m in re.finditer(expr, sentence)]
             if len(occurences) > 0:
