@@ -50,7 +50,7 @@ def get_links(p="../dial2_purenl.json", ppoi="../hit2poi250.json"):
         # print(k, label)
 
 
-    get_links_onedialog(di[0][1], poi[di[0][0]])
+    get_links_onedialog(di[1][1], poi[di[1][0]])
 
 
 def get_links_onedialog(dialog, poi):
