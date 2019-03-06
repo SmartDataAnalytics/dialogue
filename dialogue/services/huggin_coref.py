@@ -12,6 +12,8 @@ import spacy
 import sys
 import os
 import re
+import requests as req
+from dialogue.conll2clusters import conll2clusters
 
 try:
     unicode_ = unicode  # Python 2
@@ -27,6 +29,30 @@ def get_dict_of_span(span):
     ret["end"] = span.end
     ret["text"] = span.text
     return ret
+
+
+class ExternalConllClusterResource(object):
+    def __init__(self, *args, **kw):
+        super(ExternalConllClusterResource, self).__init__(*args, **kw)
+        self.ext_port = int(os.getenv("EXT_COREF_PORT", 5004))
+
+    def get_clusters(self, text):
+        conllout = req.get("http://localhost:{}/coref", params={"text": text})
+        conllout = conllout.text
+
+        clusters, tokens = conll2clusters(text, conllout)
+        response = {"clusters": clusters,
+                    "tokens": tokens,
+                    "resolved": None}
+        return response
+
+    def on_get(self, req, resp):
+        text_param = req.get_param("text")
+        self.response = self.get_clusters(text_param)
+        resp.body = json.dumps(self.response)
+        resp.content_type = 'application/json'
+        resp.append_header('Access-Control-Allow-Origin', "*")
+        resp.status = falcon.HTTP_200
 
 
 class ClusterResource(object):
@@ -378,12 +404,19 @@ if __name__ == '__main__':
     try:
         port = int(sys.argv[1])
         size = str(sys.argv[2])
+        lang = str(sys.argv[3])     # "en" or "de"
     except Exception as e:
         print("getting args failed, using defaults")
         port = 8008
         size = "medium"
+        lang = "en"
     APP = falcon.API()
-    clusters = ClusterResource(size)
+    if lang == "en":
+        clusters = ClusterResource(size)
+    elif lang == "de":
+        clusters = ExternalConllClusterResource()
+    else:
+        raise Exception("language {} not supported".format(lang))
     getcoref = GetCorefResource(clusters)
     poigetcoref = POIGetCorefResource(clusters)
     APP.add_route('/clusters', clusters)
