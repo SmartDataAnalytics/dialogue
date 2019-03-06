@@ -111,7 +111,7 @@ class GetCorefResource(object):
         context = req.get_param("context")
         sentence = req.get_param("sentence")
         self.response = {}
-        context, sentence, context_tokens, sentence_tokens, refs = self.get_corefs(context, sentence)
+        context, sentence, refs, resolved = self.get_corefs(context, sentence)
         self.response["context"] = context
         self.response["sentence"] = sentence
         # self.response["context_tokens"] = context_tokens
