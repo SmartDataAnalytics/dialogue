@@ -37,7 +37,7 @@ class ExternalConllClusterResource(object):
         self.ext_port = int(os.getenv("EXT_COREF_PORT", 5004))
 
     def get_clusters(self, text):
-        conllout = req.get("http://localhost:{}/coref", params={"text": text})
+        conllout = req.get("http://localhost:{}/coref".format(self.ext_port), params={"text": text})
         conllout = conllout.text
 
         clusters, tokens = conll2clusters(text, conllout)
