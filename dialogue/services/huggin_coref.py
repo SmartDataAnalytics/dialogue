@@ -419,15 +419,19 @@ def test_shelve():
 if __name__ == '__main__':
     test_shelve()
     print(sys.argv)
-    try:
-        port = int(sys.argv[1])
-        size = str(sys.argv[2])
-        lang = str(sys.argv[3])     # "en" or "de"
-    except Exception as e:
-        print("getting args failed, using defaults")
-        port = 8008
-        size = "medium"
-        lang = "en"
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--port", "-p", type=int, default=8008,
+                        help="Port number to listen to (default: 5004)")
+    parser.add_argument("--size", "-s", type=str, default="small",
+                        help="Size of neuralcoref model to run (default: 'small')")
+    parser.add_argument("--lang", "-l", type=str, default="en",
+                        help="Language to run (default: 'en')")
+    args = parser.parse_args()
+
+    port, size, lang = args.port, args.size, args.lang
+    print(port, size, lang)
+
     APP = falcon.API()
     if lang == "en":
         clusters = ClusterResource(size)
