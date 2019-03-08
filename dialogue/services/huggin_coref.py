@@ -235,14 +235,32 @@ class POIGetCorefResource(GetCorefResource):
                     If not specified, $POI resolution from neural-coref results is not done.
                     neural-coref $POI resolution currently requires the coref span to match at least half of the poispan
     """
-    general_expressions = [["this poi", "this thing", "this place"], ["this", "it"]]
-    #   [[strong expressions], [weak expressions]]
-    #       - strong expressions replace neural-coref results,
-    #       - weak expressions only invoked when neither strong expressions or neural-coref yielded any results
-    typed_expressions = {
-        "building": [["this building", "this construction", "construction"], []],
-        "location": [["this location", "this place"], []]
-    }
+
+    def __init__(self, clusterer, lang="en", **kw):
+        super(POIGetCorefResource, self).__init__(clusterer, **kw)
+        self.lang = lang
+        if lang == "en":
+            self.general_expressions = [["this poi", "this thing", "this place"],
+                                        ["this", "that", "it"]]
+            #   [[strong expressions], [weak expressions]]
+            #       - strong expressions replace neural-coref results,
+            #       - weak expressions only invoked when neither strong expressions or neural-coref yielded any results
+            self.typed_expressions = {
+                "building": [["this building", "this construction", "construction"], []],
+                "location": [["this location", "this place"], []]
+            }
+        elif lang == "de":
+            self.general_expressions = [["dies poi", "dieses poi", "dieser poi", "diesem poi", "diesen poi", "das poi", "dieses ding", "dies ding", "diesem ding"],
+                                        ["das", "es"]]
+            #   [[strong expressions], [weak expressions]]
+            #       - strong expressions replace neural-coref results,
+            #       - weak expressions only invoked when neither strong expressions or neural-coref yielded any results
+            self.typed_expressions = {
+                "building": [[], []],
+                "location": [[], []]
+            }
+        else:
+            raise Exception("unknown language '{}'".format(lang))
 
     def on_get(self, req, resp):
         intro = req.get_param("intro")
@@ -277,7 +295,7 @@ class POIGetCorefResource(GetCorefResource):
         for expr in applicable_expressions[which]:
             expr = "(?:^|(?<=\s|\?|\.|!)){}(?=\s|\?|\.|!|$)".format(expr)      # DONE: better fix, taking into account other kind of punctuation
             reference = None
-            occurences = [m for m in re.finditer(expr, sentence)]
+            occurences = [m for m in re.finditer(expr, sentence, re.IGNORECASE)]
             if len(occurences) > 0:
                 reference = {"from": {"text": occurences[0].group(0),
                              "start_char": occurences[0].start(),
@@ -418,11 +436,11 @@ if __name__ == '__main__':
     else:
         raise Exception("language {} not supported".format(lang))
     getcoref = GetCorefResource(clusters)
-    poigetcoref = POIGetCorefResource(clusters)
+    poigetcoref = POIGetCorefResource(clusters, lang=lang)
     APP.add_route('/clusters', clusters)
     APP.add_route('/getcoref', getcoref)
     APP.add_route('/poigetcoref', poigetcoref)
-    APP.add_route('/entitygetcoref', EntityGetCorefResource(clusters))
+    APP.add_route('/entitygetcoref', EntityGetCorefResource(clusters, lang=lang))
     APP.add_route('/testjson', TestJsonResource())
     HTTPD = make_server('0.0.0.0', port, APP)
     HTTPD.serve_forever()

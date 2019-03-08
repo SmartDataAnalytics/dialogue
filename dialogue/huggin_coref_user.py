@@ -3,21 +3,34 @@ import re
 import json
 import requests
 import numpy as np
+import sys
 
 
-def run():
-    context = """ We are at the leaning tower of Pisa. Who built it? Giuseppe Napolitano built this tower. When was it built? In the nineteenth century. """
-    poi_start = context.find("the leaning tower of Pisa")
-    poi_end = poi_start + len("the leaning tower of Pisa")
-    builder_start = context.find("Giuseppe Napolitano")
-    builder_end = builder_start + len("Giuseppe Napolitano")
+def run(port=6007, lang="en"):
+    if lang == "de":
+        context = """ Wir sind am schiefen Turm von Pisa. Wer hat es gebaut? Giuseppe Napolitano baute diesen Turm. """
+        sentence = "Wann wurde es gebaut?"
+        sentence = "Wann wurde er geboren?"
+        sentence = "Was ist dies POI?"
+        poi_start = context.find("schiefen Turm von Pisa")
+        poi_end = poi_start + len("schiefen Turm von Pisa")
+        builder_start = context.find("Giuseppe Napolitano")
+        builder_end = builder_start + len("Giuseppe Napolitano")
+    elif lang == "en":
+        context = """ We are at the leaning tower of Pisa. Who built it? Giuseppe Napolitano built this tower. """
+        sentence = "When was it built?"
+        poi_start = context.find("the leaning tower of Pisa")
+        poi_end = poi_start + len("the leaning tower of Pisa")
+        builder_start = context.find("Giuseppe Napolitano")
+        builder_end = builder_start + len("Giuseppe Napolitano")
+    else:
+        raise Exception("unknown language '{}'".format(lang))
 
     entities = {
         "$POI": {"span": [poi_start, poi_end], "type": "building"},
         "$BUILDER": {"span": [builder_start, builder_end]}
     }
 
-    sentence = "When was it built?"
 
     data = {"context": context,
             "entities": entities,
@@ -25,7 +38,7 @@ def run():
     data_json = json.dumps(data)
 
     payload = {"data": data_json}
-    r = requests.get("http://localhost:6007/entitygetcoref", params=payload)
+    r = requests.get("http://localhost:{}/entitygetcoref".format(port), params=payload)
     print(r.text)
 
 
@@ -121,6 +134,9 @@ def get_links_one(dialog, poi):
 
 
 if __name__ == '__main__':
-    ret = get_links()
-    json.dump(ret, open("dial2_predlinks.json", "w"))
+    port = int(sys.argv[1])
+    lang = sys.argv[2]
+    run(port=port, lang=lang)
+    # ret = get_links()
+    # json.dump(ret, open("dial2_predlinks.json", "w"))
 
