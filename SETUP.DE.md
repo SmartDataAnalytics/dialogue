@@ -20,7 +20,7 @@
   - `python setup.py develop`
   - run server by `python dialogue/services/huggin_coref.py -p <PORT> -s <SIZE> -l <LANG>`
     - `<PORT>` is where to start this service
-    - `<SIZE>` is one of "small", "medium" or "large" - size of coref model (only makes a difference when <LANG> is "en")
+    - `<SIZE>` is one of "small", "medium" or "large" - size of coref model (only makes a difference when `<LANG>` is "en")
     - `<LANG>` is one of "en", "de"
     - in addition, the `EXT_COREF_PORT` environment variable must be set to the port of CorZu (otherwise, default is 5004) 
 - Run example code to verify installation:
