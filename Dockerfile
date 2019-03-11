@@ -5,7 +5,8 @@ ENV R_MODELSIZE=$MODELSIZE
 
 ADD requirements.txt /
 
-RUN apt-get install swi-prolog sfst
+RUN apt-get update
+RUN apt-get -y install swi-prolog sfst
 RUN git clone https://github.com/lukovnikov/ParZu
 RUN ParZu/install.sh
 RUN python ParZu/parzu_server.py -p 5000
