@@ -21,16 +21,15 @@ RUN if [ "$MODELSIZE" = "small" ] ; then pip install https://github.com/huggingf
 RUN if [ "$MODELSIZE" = "medium" ] ; then pip install https://github.com/huggingface/neuralcoref-models/releases/download/en_coref_md-3.0.0/en_coref_md-3.0.0.tar.gz ; else echo "no medium" ; fi
 RUN if [ "$MODELSIZE" = "large" ] ; then pip install https://github.com/huggingface/neuralcoref-models/releases/download/en_coref_lg-3.0.0/en_coref_lg-3.0.0.tar.gz ; else echo "no large" ; fi
 
-RUN python setup.py develop
-
 #RUN git clone https://github.com/SmartDataAnalytics/dialogue.git
 
-ADD dialogue /
+ADD . /
+RUN python setup.py develop
 
-WORKDIR services/
+WORKDIR dialogue/services/
 
 EXPOSE 8008
 
-RUN python ParZu/parzu_server.py -p 5000 &
-RUN python CorZu/server.py -p 5001 -q 5000 &
+RUN python ../../ParZu/parzu_server.py -p 5000 &
+RUN python ../../CorZu/server.py -p 5001 -q 5000 &
 CMD python huggin_coref.py -p 8008 -s $R_MODELSIZE -l $R_COREFLANG
