@@ -1,2 +1,3 @@
 spacy==2.0.11
 falcon
+flask
