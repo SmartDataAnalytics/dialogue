@@ -8,7 +8,7 @@ ADD requirements.txt /
 RUN apt-get update
 RUN apt-get -y install swi-prolog sfst
 RUN git clone https://github.com/lukovnikov/ParZu
-RUN cd ParZu/
+RUN cd ParZu/; ./install.sh
 RUN ./install.sh
 RUN python parzu_server.py -p 5000
 RUN cd ..
