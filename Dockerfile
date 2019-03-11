@@ -11,6 +11,7 @@ RUN git clone https://github.com/lukovnikov/ParZu
 RUN cd ParZu/
 RUN ./install.sh
 RUN python parzu_server.py -p 5000
+RUN cd ..
 RUN pip install -r requirements.txt
 
 RUN python -m spacy download en
