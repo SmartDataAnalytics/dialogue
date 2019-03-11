@@ -5,12 +5,12 @@ ENV R_MODELSIZE=$MODELSIZE
 
 ADD requirements.txt /
 
+RUN pip install -r requirements.txt
 RUN apt-get update
 RUN apt-get -y install swi-prolog sfst
 RUN git clone https://github.com/lukovnikov/ParZu
 RUN cd ParZu/; ./install.sh; python parzu_server.py -p 5000
 RUN cd ..
-RUN pip install -r requirements.txt
 
 RUN python -m spacy download en
 RUN if [ "$MODELSIZE" = "small" ] ; then pip install https://github.com/huggingface/neuralcoref-models/releases/download/en_coref_sm-3.0.0/en_coref_sm-3.0.0.tar.gz ; else echo "no small" ; fi
