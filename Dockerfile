@@ -30,4 +30,4 @@ EXPOSE 8008
 
 RUN python ../../ParZu/parzu_server.py -p 5000 &
 RUN python ../../CorZu/server.py -p 5001 -q 5000 &
-CMD python huggin_coref.py -p 8008 -s $R_MODELSIZE
+CMD python coref.py -p 8008 -s $R_MODELSIZE
