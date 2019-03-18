@@ -1,9 +1,7 @@
 FROM python:3
 
 ARG MODELSIZE
-ARG COREFLANG
 ENV R_MODELSIZE=$MODELSIZE
-ENV R_COREFLANG=$COREFLANG
 
 ADD requirements.txt /
 
@@ -32,4 +30,4 @@ EXPOSE 8008
 
 RUN python ../../ParZu/parzu_server.py -p 5000 &
 RUN python ../../CorZu/server.py -p 5001 -q 5000 &
-CMD python huggin_coref.py -p 8008 -s $R_MODELSIZE -l $R_COREFLANG
+CMD python huggin_coref.py -p 8008 -s $R_MODELSIZE
