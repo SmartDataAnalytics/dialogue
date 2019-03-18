@@ -429,8 +429,8 @@ if __name__ == '__main__':
     #                     help="Language to run (default: 'en')")
     args = parser.parse_args()
 
-    port, size, lang = args.port, args.size, args.lang
-    print(port, size, lang)
+    port, size = args.port, args.size
+    print(port, size)
 
     APP = falcon.API()
 
