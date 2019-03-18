@@ -32,9 +32,9 @@ def get_dict_of_span(span):
 
 
 class ExternalConllClusterResource(object):
-    def __init__(self, *args, **kw):
+    def __init__(self, ext_port=5004, *args, **kw):
         super(ExternalConllClusterResource, self).__init__(*args, **kw)
-        self.ext_port = int(os.getenv("EXT_COREF_PORT", 5004))
+        self.ext_port =ext_port
 
     def get_clusters(self, text):
         conllout = req.get("http://localhost:{}/coref".format(self.ext_port), params={"text": text})
@@ -425,26 +425,35 @@ if __name__ == '__main__':
                         help="Port number to listen to (default: 5004)")
     parser.add_argument("--size", "-s", type=str, default="small",
                         help="Size of neuralcoref model to run (default: 'small')")
-    parser.add_argument("--lang", "-l", type=str, default="en",
-                        help="Language to run (default: 'en')")
+    # parser.add_argument("--lang", "-l", type=str, default="en",
+    #                     help="Language to run (default: 'en')")
     args = parser.parse_args()
 
     port, size, lang = args.port, args.size, args.lang
     print(port, size, lang)
 
     APP = falcon.API()
-    if lang == "en":
-        clusters = ClusterResource(size)
-    elif lang == "de":
-        clusters = ExternalConllClusterResource()
-    else:
-        raise Exception("language {} not supported".format(lang))
+
+    print("loading English coref")
+    clusters = ClusterResource(size)
     getcoref = GetCorefResource(clusters)
-    poigetcoref = POIGetCorefResource(clusters, lang=lang)
-    APP.add_route('/clusters', clusters)
-    APP.add_route('/getcoref', getcoref)
-    APP.add_route('/poigetcoref', poigetcoref)
-    APP.add_route('/entitygetcoref', EntityGetCorefResource(clusters, lang=lang))
-    APP.add_route('/testjson', TestJsonResource())
+    poigetcoref = POIGetCorefResource(clusters, lang="en")
+    APP.add_route('/en/clusters', clusters)
+    APP.add_route('/en/getcoref', getcoref)
+    APP.add_route('/en/poigetcoref', poigetcoref)
+    APP.add_route('/en/entitygetcoref', EntityGetCorefResource(clusters, lang="en"))
+    print("loaded English coref")
+    print("loading German coref")
+    german_external_port = int(os.getenv("EXT_COREF_PORT", 5004))
+    clusters = ExternalConllClusterResource(ext_port=german_external_port)
+    getcoref = GetCorefResource(clusters)
+    poigetcoref = POIGetCorefResource(clusters, lang="de")
+    APP.add_route('/de/clusters', clusters)
+    APP.add_route('/de/getcoref', getcoref)
+    APP.add_route('/de/poigetcoref', poigetcoref)
+    APP.add_route('/de/entitygetcoref', EntityGetCorefResource(clusters, lang="de"))
+    # APP.add_route('/en/testjson', TestJsonResource())
+    print("loaded German coref")
+    print("starting server")
     HTTPD = make_server('0.0.0.0', port, APP)
     HTTPD.serve_forever()
