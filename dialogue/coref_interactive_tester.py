@@ -28,7 +28,12 @@ def get_out(context, sentence):
 
 
 def run(port=8008, lang="en", skipcoref=False):
-    gret = "Hello, my name is "
+    if lang == "en":
+        gret = "Hello, my name is "
+    elif lang == "de":
+        gret = "Hello, mein name ist "
+    else:
+        raise Exception("unknown language: {}".format(lang))
     name = "Tony"
     greeting = (gret + name + "!", (len(gret), len(gret) + len(name)))
     context = [greeting]
