@@ -87,7 +87,10 @@ def conll2clusters(inp, out):
 
 
 def tokpos2charpos(text, tokens):
-    assert(text.replace(" ", "") == " ".join(tokens).replace(" ", ""))
+    if text.replace(" ", "") != " ".join(tokens).replace(" ", ""):
+        print(text)
+        print(tokens)
+        raise Exception("sum ting wong")
     text_ = text + ""
     tokpos2charpos = {}
     acc = 0
