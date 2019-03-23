@@ -27,6 +27,8 @@ RUN python setup.py develop
 WORKDIR dialogue/services/
 
 EXPOSE 8008
+EXPOSE 6500
+EXPOSE 6501
 
 #RUN python ../../ParZu/parzu_server.py -p 5000 &
 #RUN python ../../CorZu/server.py -p 5001 -q 5000 &
