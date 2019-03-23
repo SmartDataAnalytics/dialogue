@@ -10,7 +10,7 @@ RUN apt-get update
 RUN apt-get -y install swi-prolog sfst
 RUN git clone https://github.com/lukovnikov/ParZu
 RUN cd ParZu/; ./install.sh
-RUN python ParZu/parzu_server.py -p 6500 &
+#RUN python ParZu/parzu_server.py -p 6500 &
 RUN git clone https://github.com/lukovnikov/CorZu
 RUN export EXT_COREF_PORT=6501
 
