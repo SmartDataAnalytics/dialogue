@@ -90,7 +90,7 @@ def tokpos2charpos(text, tokens):
     if text.replace(" ", "") != " ".join(tokens).replace(" ", ""):
         print(text)
         print(tokens)
-        raise Exception("sum ting wong")
+        raise Exception("sum ting wong: {}, {}".format(str(text), str(tokens)))
     text_ = text + ""
     tokpos2charpos = {}
     acc = 0
