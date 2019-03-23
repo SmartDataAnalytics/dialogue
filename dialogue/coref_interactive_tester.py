@@ -14,15 +14,23 @@ def get_out(context, sentence):
     history = ""
     entities = {}
     for context_sentence in context:
-        for a, b in context_sentence[1]:
-            entid = "$ENT{}".format(len(entities)+1)
+        if i == 0:      # first line is intro, is POI
+            entid = "$POI"
+            a, b = context_sentence[1][0][0], context_sentence[1][0][1]
             entities[entid] = {"span": [a+len(history), b+len(history)]}
+        else:
+            for a, b in context_sentence[1]:
+                entid = "$ENT{}".format(len(entities)+1)
+                entities[entid] = {"span": [a+len(history), b+len(history)]}
         history += context_sentence[0] + "\n"
+        i += 1
     return history, entities, sentence
 
 
 def run(port=8008, lang="en", skipcoref=False):
-    greeting = ("Hello, my name is Tony!", [])
+    gret = "Hello, my name is "
+    name = "Tony"
+    greeting = (gret + name + "!", [len(gret), len(gret) + len(name)])
     context = [greeting]
     stop = False
     turn = SYSTEM
