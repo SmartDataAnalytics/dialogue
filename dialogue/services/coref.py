@@ -432,9 +432,9 @@ if __name__ == '__main__':
     port, size = args.port, args.size
     print(port, size)
 
-    print("testing")
-    x = req.get("http://0.0.0.0:6501/coref?text=Das ist Charlie. Wer ist Er?")
-    print(x.text)
+    # print("testing")
+    # x = req.get("http://0.0.0.0:6501/coref?text=Das ist Charlie. Wer ist Er?")
+    # print(x.text)
 
     APP = falcon.API()
 
