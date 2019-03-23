@@ -1,0 +1,11 @@
+# docker-compose.yml
+
+version: '69'
+
+services:
+  webserver:
+    build: .
+    ports:
+     - "8100:8008"
+     - "8101:6500"
+     - "8102:6501"
