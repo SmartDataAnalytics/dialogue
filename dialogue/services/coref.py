@@ -444,7 +444,7 @@ if __name__ == '__main__':
     APP.add_route('/en/entitygetcoref', EntityGetCorefResource(clusters, lang="en"))
     print("loaded English coref")
     print("loading German coref")
-    german_external_port = int(os.getenv("EXT_COREF_PORT", 5004))
+    german_external_port = int(os.getenv("EXT_COREF_PORT", 5001))
     clusters = ExternalConllClusterResource(ext_port=german_external_port)
     getcoref = GetCorefResource(clusters)
     poigetcoref = POIGetCorefResource(clusters, lang="de")
