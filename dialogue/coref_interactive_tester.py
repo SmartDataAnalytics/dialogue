@@ -71,6 +71,7 @@ def run(port=8008, lang="en", skipcoref=False):
                 "entities": e
             }
             data_json = json.dumps(data)
+            print(data_json)
             payload = {"data": data_json}
             r = requests.get("http://localhost:{}/{}/entitygetcoref".format(port, lang),
                              params=payload)
