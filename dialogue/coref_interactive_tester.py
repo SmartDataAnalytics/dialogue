@@ -16,7 +16,7 @@ def get_out(context, sentence):
     for context_sentence in context:
         if i == 0:      # first line is intro, is POI
             entid = "$POI"
-            a, b = context_sentence[1][0][0], context_sentence[1][0][1]
+            a, b = context_sentence[1][0], context_sentence[1][1]
             entities[entid] = {"span": [a+len(history), b+len(history)]}
         else:
             for a, b in context_sentence[1]:
@@ -30,7 +30,7 @@ def get_out(context, sentence):
 def run(port=8008, lang="en", skipcoref=False):
     gret = "Hello, my name is "
     name = "Tony"
-    greeting = (gret + name + "!", [len(gret), len(gret) + len(name)])
+    greeting = (gret + name + "!", (len(gret), len(gret) + len(name)))
     context = [greeting]
     stop = False
     turn = SYSTEM
