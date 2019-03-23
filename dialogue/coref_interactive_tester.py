@@ -80,4 +80,6 @@ def run(port=8008, lang="en", skipcoref=False):
 
 
 if __name__ == '__main__':
-    run()
+    port = int(sys.argv[1])
+    lang = str(sys.argv[2])
+    run(port, lang)
