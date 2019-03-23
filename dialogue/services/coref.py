@@ -37,7 +37,7 @@ class ExternalConllClusterResource(object):
         self.ext_port =ext_port
 
     def get_clusters(self, text):
-        conllout = req.get("http://localhost:{}/coref".format(self.ext_port), params={"text": text})
+        conllout = req.get("http://0.0.0.0:{}/coref".format(self.ext_port), params={"text": text})
         conllout = conllout.text
 
         clusters, tokens = conll2clusters(text, conllout)
@@ -222,7 +222,7 @@ class POIGetCorefResource(GetCorefResource):
     - for neural-coref, transforms span-return to $POI-return if intro and poispan in intro (char-level spec) is provided
 
     Example usage:
-        http://localhost:6007/poigetcoref?poitype=building&poispan=20-37&intro=we%20currently%20are%20at%20the%20tower%20of%20pisa&context=mr.%20paul%20likes%20dumplings.%20he%20loves%20them.%20&sentence=who%20built%20this%20tower
+        http://0.0.0.0:6007/poigetcoref?poitype=building&poispan=20-37&intro=we%20currently%20are%20at%20the%20tower%20of%20pisa&context=mr.%20paul%20likes%20dumplings.%20he%20loves%20them.%20&sentence=who%20built%20this%20tower
 
     GET arguments:
     - context:      string with dialogue history
@@ -433,7 +433,7 @@ if __name__ == '__main__':
     print(port, size)
 
     print("testing")
-    x = req.get("http://localhost:6501/coref?text=Das ist Charlie. Wer ist Er?")
+    x = req.get("http://0.0.0.0:6501/coref?text=Das ist Charlie. Wer ist Er?")
     print(x.text)
 
     APP = falcon.API()
