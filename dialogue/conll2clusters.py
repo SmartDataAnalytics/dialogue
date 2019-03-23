@@ -97,7 +97,7 @@ def tokpos2charpos(text, tokens):
     for i, token in enumerate(tokens):
         startchar = text_.find(token)
         endchar = startchar + len(token)
-        assert(len(text_[:startchar].replace(" ", "")) == 0)
+        assert(len(re.sub("\s+", "", text_[:startchar])) == 0)
         tokpos2charpos[i] = (acc + startchar, acc + endchar)
         text_ = text_[endchar:]
         acc += endchar
