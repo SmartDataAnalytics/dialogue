@@ -74,6 +74,7 @@ def run(port=8008, lang="en", skipcoref=False):
             payload = {"data": data_json}
             r = requests.get("http://localhost:{}/{}/entitygetcoref".format(port, lang),
                              params=payload)
+            print(r.text)
         # update state for next iter
         context.append((x_, newents))
         turn = SYSTEM if turn == USER else USER
