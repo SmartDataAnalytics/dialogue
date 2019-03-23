@@ -12,6 +12,7 @@ def run(port=6007, lang="en"):
         sentence = "Wann wurde es gebaut?"
         sentence = "Wann wurde er geboren?"
         sentence = "Was ist dies POI?"
+        sentence = "Wer ist er?"
         poi_start = context.find("schiefen Turm von Pisa")
         poi_end = poi_start + len("schiefen Turm von Pisa")
         builder_start = context.find("Giuseppe Napolitano")
@@ -19,6 +20,7 @@ def run(port=6007, lang="en"):
     elif lang == "en":
         context = """ We are at the leaning tower of Pisa. Who built it? Giuseppe Napolitano built this tower. """
         sentence = "When was it built?"
+        sentence = "Who is he?"
         poi_start = context.find("the leaning tower of Pisa")
         poi_end = poi_start + len("the leaning tower of Pisa")
         builder_start = context.find("Giuseppe Napolitano")
