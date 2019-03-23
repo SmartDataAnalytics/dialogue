@@ -10,9 +10,9 @@ RUN apt-get update
 RUN apt-get -y install swi-prolog sfst
 RUN git clone https://github.com/lukovnikov/ParZu
 RUN cd ParZu/; ./install.sh
-RUN python ParZu/parzu_server.py -p 5000 &
+RUN python ParZu/parzu_server.py -p 6500 &
 RUN git clone https://github.com/lukovnikov/CorZu
-RUN export EXT_COREF_PORT=5001
+RUN export EXT_COREF_PORT=6501
 
 RUN python -m spacy download en
 RUN if [ "$MODELSIZE" = "small" ] ; then pip install https://github.com/huggingface/neuralcoref-models/releases/download/en_coref_sm-3.0.0/en_coref_sm-3.0.0.tar.gz ; else echo "no small" ; fi

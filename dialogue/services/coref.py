@@ -422,7 +422,7 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", "-p", type=int, default=8008,
-                        help="Port number to listen to (default: 5004)")
+                        help="Port number to listen to (default: 8008)")
     parser.add_argument("--size", "-s", type=str, default="small",
                         help="Size of neuralcoref model to run (default: 'small')")
     # parser.add_argument("--lang", "-l", type=str, default="en",
@@ -444,7 +444,7 @@ if __name__ == '__main__':
     APP.add_route('/en/entitygetcoref', EntityGetCorefResource(clusters, lang="en"))
     print("loaded English coref")
     print("loading German coref")
-    german_external_port = int(os.getenv("EXT_COREF_PORT", 5001))
+    german_external_port = int(os.getenv("EXT_COREF_PORT", 6501))
     clusters = ExternalConllClusterResource(ext_port=german_external_port)
     getcoref = GetCorefResource(clusters)
     poigetcoref = POIGetCorefResource(clusters, lang="de")
