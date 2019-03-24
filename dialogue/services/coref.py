@@ -360,7 +360,7 @@ class EntityGetCorefResource(POIGetCorefResource):
 
     def get_corefs(self, context, sentence, entities):
         assert("$POI" in entities)
-
+        print("Context, sentence, entities")
         print(context, sentence, entities)
 
         # STRONG POI EXPRESSIONS
