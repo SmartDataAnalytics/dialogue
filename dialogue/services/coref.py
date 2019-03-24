@@ -130,7 +130,7 @@ class ClusterResource(object):
 
 
 class GetCorefResource(object):
-    DELIM = " Dis. "
+    DELIM = " ---. "
 
     def __init__(self, clusterer):
         super(GetCorefResource, self).__init__()
