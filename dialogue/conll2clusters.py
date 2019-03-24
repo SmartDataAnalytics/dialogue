@@ -12,6 +12,7 @@ def conll2clusters(inp, out):
     tokens = []
     resolved = ""
     tok_nr = 0
+    print("conlltoclusters")
     print(inp)
     print(out)
     print(lines)
