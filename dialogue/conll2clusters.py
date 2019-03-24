@@ -12,6 +12,9 @@ def conll2clusters(inp, out):
     tokens = []
     resolved = ""
     tok_nr = 0
+    print(inp)
+    print(out)
+    print(lines)
     for line in lines:
         line = line.strip().split("\t")
         if len(line) > 1:
