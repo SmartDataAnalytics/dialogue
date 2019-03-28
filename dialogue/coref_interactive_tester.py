@@ -24,7 +24,7 @@ def get_out(context, sentence):
             for a, b in context_sentence[1]:
                 entid = "$ENT{}".format(len(entities)+1)
                 entities[entid] = {"span": [a+len(history), b+len(history)]}
-        history += context_sentence[0] + " "
+        history += context_sentence[0] + " \n"
         i += 1
     return history, entities, sentence
 
