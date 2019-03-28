@@ -94,7 +94,7 @@ def run(port=8008, lang="en", skipcoref=False):
                              params=payload)
             end = time.time()
             pp.pprint(r.text)
-            print(end-start)
+            print("Coref request time: {}".format(end-start))
         # update state for next iter
         context.append((x_, newents))
         turn = SYSTEM if turn == USER else USER
