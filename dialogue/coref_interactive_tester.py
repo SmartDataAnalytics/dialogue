@@ -3,6 +3,8 @@ import requests
 import tabulate
 import json
 import sys
+import time
+from pprint import PrettyPrinter
 
 
 SYSTEM = "SYSTEM"
@@ -28,6 +30,7 @@ def get_out(context, sentence):
 
 
 def run(port=8008, lang="en", skipcoref=False):
+    pp = PrettyPrinter()
     if lang == "en":
         gret = "Hello, my name is "
     elif lang == "de":
@@ -86,9 +89,12 @@ def run(port=8008, lang="en", skipcoref=False):
             data_json = json.dumps(data)
             print(data_json)
             payload = {"data": data_json}
+            start = time.time()
             r = requests.get("http://localhost:{}/{}/entitygetcoref".format(port, lang),
                              params=payload)
-            print(r.text)
+            end = time.time()
+            pp.pprint(r.text)
+            print(end-start)
         # update state for next iter
         context.append((x_, newents))
         turn = SYSTEM if turn == USER else USER
