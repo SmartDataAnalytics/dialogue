@@ -4,9 +4,11 @@ import json
 import requests
 import numpy as np
 import sys
+from pprint import PrettyPrinter
 
 
 def run(port=6007, lang="en"):
+    pp = PrettyPrinter()
     if lang == "de":
         context = """ Wir sind am schiefen Turm von Pisa. Wer hat es gebaut? Giuseppe Napolitano baute diesen Turm. """
         sentence = "Wann wurde es gebaut?"
@@ -43,7 +45,7 @@ def run(port=6007, lang="en"):
 
     payload = {"data": data_json}
     r = requests.get("http://localhost:{}/{}/entitygetcoref".format(port, lang), params=payload)
-    print(r.text)
+    pp.pprint(r.text)
 
 
 def uri2label(uri):
