@@ -18,7 +18,9 @@ def run(port=6007, lang="en"):
         builder_start = context.find("Giuseppe Napolitano")
         builder_end = builder_start + len("Giuseppe Napolitano")
     elif lang == "en":
-        context = """ We are at the leaning tower of Pisa. Who built it? Giuseppe Napolitano built this tower. """
+        context = """ We are at the leaning tower of Pisa. 
+        Who built it? 
+        Giuseppe Napolitano built this tower. """
         sentence = "When was it built?"
         sentence = "Who is he?"
         poi_start = context.find("the leaning tower of Pisa")
