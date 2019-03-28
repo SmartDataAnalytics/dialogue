@@ -423,21 +423,8 @@ def test_shelve():
         print(s["id"])
 
 
-if __name__ == '__main__':
+def get_app(size, ext_coref_port=6501):
     # test_shelve()
-    print(sys.argv)
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--port", "-p", type=int, default=8008,
-                        help="Port number to listen to (default: 8008)")
-    parser.add_argument("--size", "-s", type=str, default="small",
-                        help="Size of neuralcoref model to run (default: 'small')")
-    # parser.add_argument("--lang", "-l", type=str, default="en",
-    #                     help="Language to run (default: 'en')")
-    args = parser.parse_args()
-
-    port, size = args.port, args.size
-    print(port, size)
 
     # print("testing")
     # x = req.get("http://0.0.0.0:6501/coref?text=Das ist Charlie. Wer ist Er?")
@@ -455,7 +442,7 @@ if __name__ == '__main__':
     APP.add_route('/en/entitygetcoref', EntityGetCorefResource(clusters, lang="en"))
     print("loaded English coref")
     print("loading German coref")
-    german_external_port = int(os.getenv("EXT_COREF_PORT", 6501))
+    german_external_port = int(os.getenv("EXT_COREF_PORT", ext_coref_port))
     clusters = ExternalConllClusterResource(ext_port=german_external_port)
     getcoref = GetCorefResource(clusters)
     poigetcoref = POIGetCorefResource(clusters, lang="de")
@@ -465,6 +452,27 @@ if __name__ == '__main__':
     APP.add_route('/de/entitygetcoref', EntityGetCorefResource(clusters, lang="de"))
     # APP.add_route('/en/testjson', TestJsonResource())
     print("loaded German coref")
+
+    return APP
+
+
+if __name__ == '__main__':
+    print(sys.argv)
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--port", "-p", type=int, default=8008,
+                        help="Port number to listen to (default: 8008)")
+    parser.add_argument("--size", "-s", type=str, default="small",
+                        help="Size of neuralcoref model to run (default: 'small')")
+    # parser.add_argument("--lang", "-l", type=str, default="en",
+    #                     help="Language to run (default: 'en')")
+    args = parser.parse_args()
+
+    port, size = args.port, args.size
+    print(port, size)
+
+    app = get_app(size, ext_coref_port=6501)
+
     print("starting server")
-    HTTPD = make_server('0.0.0.0', port, APP)
+    HTTPD = make_server('0.0.0.0', port, app)
     HTTPD.serve_forever()
