@@ -93,7 +93,7 @@ def run(port=8008, lang="en", skipcoref=False):
             r = requests.get("http://localhost:{}/{}/entitygetcoref".format(port, lang),
                              params=payload)
             end = time.time()
-            pp.pprint(r.text)
+            pp.pprint(json.loads(r.text))
             print("Coref request time: {}".format(end-start))
         # update state for next iter
         context.append((x_, newents))

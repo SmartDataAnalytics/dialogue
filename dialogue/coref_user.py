@@ -45,7 +45,9 @@ def run(port=6007, lang="en"):
 
     payload = {"data": data_json}
     r = requests.get("http://localhost:{}/{}/entitygetcoref".format(port, lang), params=payload)
-    pp.pprint(r.text)
+    result = json.loads(r.text)
+    pp.pprint(result)
+    print(result["context"])
 
 
 def uri2label(uri):
